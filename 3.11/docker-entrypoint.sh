@@ -14,6 +14,16 @@ if [ "$1" = 'cassandra' -a "$(id -u)" = '0' ]; then
 	exec gosu cassandra "$BASH_SOURCE" "$@"
 fi
 
+if [ -f "/config/set-env-vars.sh" ]
+then
+  source /config/set-env-vars.sh
+else
+  if [ -z "$CASSANDRA_DEV_MODE" ]; then
+    echo "Script /config/set-env-vars.sh to configure rack and dc variables is missing."
+    exit 1
+  fi
+fi
+
 _ip_address() {
 	# scrape the first non-localhost IP address of the container
 	# in Swarm Mode, we often get two IPs -- the container IP, and the (shared) VIP, and the container IP should always be first
