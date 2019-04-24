@@ -2,7 +2,7 @@
 FROM debian:stretch-slim
 
 # explicitly set user/group IDs
-RUN groupadd -r cassandra --gid=999 && useradd -r -g cassandra --uid=999 cassandra
+RUN groupadd -r cassandra --gid=1000 && useradd -r -g cassandra --uid=1000 cassandra
 
 RUN set -ex; \
 	apt-get update; \
@@ -123,6 +123,8 @@ RUN set -ex; \
 
 ENV CASSANDRA_CONFIG /etc/cassandra
 
+COPY cassandra.yaml $CASSANDRA_CONFIG/
+
 RUN set -ex; \
 	\
 	dpkgArch="$(dpkg --print-architecture)"; \
@@ -147,7 +149,10 @@ RUN set -ex; \
 	sed -ri 's/^(JVM_PATCH_VERSION)=.*/\1=25/' "$CASSANDRA_CONFIG/cassandra-env.sh"
 
 COPY docker-entrypoint.sh /usr/local/bin/
+COPY ready-probe.sh /usr/local/bin/
+COPY cassandra-kubernetes-libs/* /usr/share/cassandra/lib/
 RUN ln -s usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh # backwards compat
+RUN ln -s usr/local/bin/ready-probe.sh /ready-probe.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 RUN mkdir -p /var/lib/cassandra "$CASSANDRA_CONFIG" \
@@ -161,4 +166,5 @@ VOLUME /var/lib/cassandra
 # 9042: CQL
 # 9160: thrift service
 EXPOSE 7000 7001 7199 9042 9160
-CMD ["cassandra", "-f"]
+#CMD ["cassandra", "-f"]
+CMD ["/bin/bash", "-c", "sleep infinity"]

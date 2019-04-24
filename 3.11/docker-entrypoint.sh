@@ -14,6 +14,8 @@ if [ "$1" = 'cassandra' -a "$(id -u)" = '0' ]; then
 	exec gosu cassandra "$BASH_SOURCE" "$@"
 fi
 
+source /config/set-env-vars.sh
+
 _ip_address() {
 	# scrape the first non-localhost IP address of the container
 	# in Swarm Mode, we often get two IPs -- the container IP, and the (shared) VIP, and the container IP should always be first
@@ -85,6 +87,10 @@ if [ "$1" = 'cassandra' ]; then
 				-r 's/^('"$rackdc"'=).*/\1 '"$val"'/'
 		fi
 	done
+
+	# Gossiping snitch loads cassandra-topology.properties for backward
+	# compatibility. This file should be removed.
+	rm /etc/cassandra/cassandra-topology.properties
 fi
 
 exec "$@"
